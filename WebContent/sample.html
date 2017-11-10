@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angular JS With REST</title>
+<link
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+	rel="stylesheet">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+<script type="text/javascript">
+           var app = angular.module("EmployeeManagement", []);
+           app.controller("EmployeeController", function($scope, $http) {
+        	   
+        	 //Initialize page with default data which is blank in this example
+        	   $scope.events = [];
+        	   $scope.form = {
+        	   id : -1,
+        	   name : "",
+        	   age : ""
+        	   };
+        	  
+        	 //Now load the data from server
+               _refreshPageData();     
+
+        	 
+             //HTTP POST/PUT methods for add/edit employee
+               $scope.submitEmployee = function() {
+               var method = "";
+               var url = "";
+               if ($scope.form.id == -1) {
+               		//Id is absent so add employee - POST operation
+               		method = "POST";
+               		url = 'REST/EmployeeServices/create';
+               } else {
+              	 	//If Id is present, it's edit operation - PUT operation
+               		method = "PUT";
+               		url = 'REST/EmployeeServices/update';
+               }
+              
+               $http({
+            	   method : method,
+            	   url : url,
+            	   data : angular.toJson($scope.form),
+            	   headers : {
+            	   'Content-Type' : 'application/json'
+            	   }
+            	   }).then( _success, _error );
+            	};
+            	
+            	//HTTP DELETE- delete employee by Id
+            	$scope.removeEmployee = function(emplid) {
+            		//alert('employee id '+emplid)
+            	$http({
+	            	method : 'DELETE',
+	            	url : 'REST/EmployeeServices/deleteEmployee/'+ emplid
+	            	}).then(_success, _error);
+	            	};
+	            	
+	            	
+	            	//In case of edit employee, populate form with employee data
+	            $scope.editEmployee = function(event) {
+	            	$scope.form.name = event.name;
+	            	$scope.form.age = event.age;	            	
+	            	$scope.form.id = event.id;
+            	};
+        	 
+            	
+            	 $scope.editUser = function(id) {
+                     
+                     if (id == 'new') {
+                      
+                       $scope.form.name = '';
+                       $scope.form.age = '';
+                   	   $scope.form.id = -1;
+                       } 
+                   };
+            	
+            	/* Private Methods */
+            	//HTTP GET- get all employees collection
+            	function _refreshPageData() {
+            	$http({
+		            	method : 'GET',
+		            	url : 'REST/EmployeeServices/GetEmployees'
+		            	}).then(function successCallback(response) {
+		            	$scope.events = response.data;
+		            	}, function errorCallback(response) {
+		            	console.log(response.statusText);
+	            	});
+            	}
+            	
+            	function _success(response) {
+            		_refreshPageData();
+            		_clearForm();
+            		}
+            		
+            	function _error(response) {
+            		console.log(response.statusText);
+            		}
+            		//Clear the form
+            	function _clearForm() {
+	            		$scope.form.name = "";
+	            		$scope.form.age = "";	            	
+	            		$scope.form.id = -1;
+            		}
+           
+           });
+        	 
+              
+        </script>
+
+<style>
+.even {
+	background-color: yellow;
+}
+
+.odd {
+	background-color: white;
+}
+</style>
+</head>
+
+<body ng-app="EmployeeManagement" ng-controller="EmployeeController">
+	<!-- container section start -->
+	<section id="container" class="">
+		<!--main content start-->
+		<section>
+			<section>
+				<!-- page start-->
+				<div class="container">
+					<div class="col-lg-12">
+						<section class="panel">
+							<header class="panel-heading" style="font-weight: bold;">
+								Employee List </header>
+							<div class="table-responsive" style="overflow-x: auto;">
+								<table class="table table-bordered table-hover">
+									<thead>
+										<tr class="success">
+											<th >Employee Id</th>
+											<th>Employee Description</th>
+											<th>Employee Age</th>
+											<th>Edit</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-class-odd="'danger'" ng-class-even="'info'"
+											ng-repeat="event in events">
+											<td >{{ event.id }}</td>
+											<td >{{ event.name }}</td>											
+											<td>{{ event.age }}</td>
+											<td>
+												<button class="btn btn-primary"
+													ng-click="editEmployee( event )">&#9998; Edit</button>
+												
+												<button class="btn btn-danger"
+													ng-click="removeEmployee(event.id)">&#9998; Delete</button>
+											</td>
+										</tr>
+
+									</tbody>
+								</table>
+
+								<br>
+								<button class="btn btn-warning" ng-click="editUser('new')">&#9998;
+									Create New User</button>
+							</div>
+						</section>
+					</div>
+				</div>
+
+
+				
+				<form class="form-horizontal" ng-hide="hideform" ng-submit="submitEmployee()"  role="form">
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+							<h3 ng-show="edit">Create New User:</h3>
+							<h3 ng-hide="edit">Edit User:</h3>
+							</div>
+					  </div>
+					  <div class="form-group">
+					    <label class="control-label col-sm-2" for="name">Name:</label>
+					    <div class="col-xs-4">
+					      <input type="text" class="form-control"  ng-model="form.name" id="name" placeholder="Enter Name">
+					    </div>
+					  </div>
+					  <div class="form-group">
+					    <label class="control-label col-sm-2" for="age">Age:</label>
+					    <div class="col-xs-4"> 
+					      <input type="text" class="form-control" ng-model="form.age" id="age" placeholder="Enter Age">
+					    </div>
+					  </div>
+					  <div class="form-group"> 
+					    <div class="col-sm-offset-2 col-sm-10">
+					      <div class="checkbox">
+					        <label><input type="checkbox"> Remember me</label>
+					      </div>
+					    </div>
+					  </div>
+					  <div class="form-group"> 
+					    <div class="col-sm-offset-2 col-sm-10">
+					     <button class="btn btn-primary" ng-disabled="error || incomplete">&#10004;
+						Save Changes</button>
+					    </div>
+					  </div>
+					</form>
+
+
+			</section>
+		</section>
+	</section>
+</body>
+</html>
